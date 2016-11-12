@@ -1,4 +1,4 @@
-package blueprints.builder;
+package blueprints.factory.builder;
 
 import java.util.Map;
 

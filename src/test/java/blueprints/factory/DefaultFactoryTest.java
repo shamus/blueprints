@@ -2,7 +2,7 @@ package blueprints.factory;
 
 import blueprints.Blueprint;
 import blueprints.ConfigurationDSL;
-import blueprints.builder.BuildStrategy;
+import blueprints.factory.builder.BuildStrategy;
 import org.junit.Before;
 import org.junit.Test;
 

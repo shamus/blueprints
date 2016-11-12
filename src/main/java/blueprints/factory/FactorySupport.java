@@ -1,8 +1,8 @@
 package blueprints.factory;
 
 import blueprints.Blueprint;
-import blueprints.builder.BuildStrategy;
-import blueprints.builder.BuilderPatternBuildStrategy;
+import blueprints.factory.builder.BuildStrategy;
+import blueprints.factory.builder.BuilderPatternBuildStrategy;
 
 import java.util.Map;
 

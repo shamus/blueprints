@@ -1,4 +1,4 @@
-package blueprints.builder;
+package blueprints.factory.builder;
 
 public class CannotBuildModelException
     extends RuntimeException

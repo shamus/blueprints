@@ -4,7 +4,7 @@ import blueprints.Blueprint;
 import blueprints.ConfigurationDSL;
 import blueprints.Factory;
 import blueprints.UnsafeOperation;
-import blueprints.builder.BuildStrategy;
+import blueprints.factory.builder.BuildStrategy;
 
 import java.util.Map;
 import java.util.function.Consumer;
