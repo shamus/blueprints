@@ -30,7 +30,6 @@ public class FactoryTest
         assertThat(model.getAge(), is(40));
     }
 
-
     @Test
     public void shouldCreateAModelFromConfiguration()
     {
