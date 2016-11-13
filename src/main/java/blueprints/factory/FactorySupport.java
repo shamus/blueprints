@@ -1,6 +1,7 @@
 package blueprints.factory;
 
 import blueprints.Blueprint;
+import blueprints.Sequence;
 import blueprints.factory.builder.BuildStrategy;
 import blueprints.factory.builder.BuilderPatternBuildStrategy;
 
@@ -28,13 +29,13 @@ public interface FactorySupport
         }
 
         @Override
-        public Map<String, Object> extractDefaultsFrom(Class<?> blueprint)
+        public Map<String, Object> extractDefaultsFrom(Class<?> blueprint, Sequence sequence)
         {
-            return propertyExtractor.extractDefaults(blueprint);
+            return propertyExtractor.extractDefaults(blueprint, sequence);
         }
     };
 
     <T> BuildStrategy<T> buildStrategyFor(Class<?> blueprint);
     <T> T dslFor(Class<T> configurationDSL, Map<String, Object> properties);
-    Map<String, Object> extractDefaultsFrom(Class<?> blueprint);
+    Map<String, Object> extractDefaultsFrom(Class<?> blueprint, Sequence sequence);
 }

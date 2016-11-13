@@ -2,6 +2,7 @@ package blueprints.factory;
 
 import blueprints.Blueprint;
 import blueprints.ConfigurationDSL;
+import blueprints.Sequence;
 import blueprints.factory.builder.BuildStrategy;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import java.util.function.Consumer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -23,6 +25,7 @@ public class DefaultFactoryTest
     private BuildStrategy buildStrategy;
     private FactorySupport factorySupport;
     private HashMap<String, Object> defaults;
+    private Sequence sequence;
 
     @Before
     public void setUp()
@@ -32,7 +35,7 @@ public class DefaultFactoryTest
 
         defaults = new HashMap<>();
         when(factorySupport.buildStrategyFor(any())).thenReturn(buildStrategy);
-        when(factorySupport.extractDefaultsFrom(any())).thenReturn(defaults);
+        when(factorySupport.extractDefaultsFrom(any(), any())).thenReturn(defaults);
         when(factorySupport.dslFor(any(), any())).thenAnswer(invocation ->
             ReflectiveProxyConfigurationDSL.proxying(invocation.getArgument(0), invocation.getArgument(1))
         );
@@ -52,7 +55,7 @@ public class DefaultFactoryTest
         assertThat(factory.create(), is(NEWLY_BUILT));
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
-        verify(factorySupport).extractDefaultsFrom(ModelBlueprint.class);
+        verify(factorySupport).extractDefaultsFrom(eq(ModelBlueprint.class), isA(Sequence.class));
         verify(factorySupport).dslFor(ModelConfiguration.class, defaults);
         verify(buildStrategy).apply(defaults);
     }
@@ -70,7 +73,7 @@ public class DefaultFactoryTest
         assertThat(factory.create(configuration), is(NEWLY_BUILT));
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
-        verify(factorySupport).extractDefaultsFrom(ModelBlueprint.class);
+        verify(factorySupport).extractDefaultsFrom(eq(ModelBlueprint.class), isA(Sequence.class));
         verify(factorySupport).dslFor(ModelConfiguration.class, defaults);
         verify(buildStrategy).apply(defaults);
         verify(configuration).accept(isA(ModelConfiguration.class));

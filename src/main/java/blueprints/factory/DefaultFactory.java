@@ -2,6 +2,7 @@ package blueprints.factory;
 
 import blueprints.Blueprint;
 import blueprints.ConfigurationDSL;
+import blueprints.Sequence;
 import blueprints.Factory;
 import blueprints.UnsafeOperation;
 import blueprints.factory.builder.BuildStrategy;
@@ -21,6 +22,7 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
     private Class<?> blueprint;
     private Class<D> dslClass;
     private BuildStrategy<T> strategy;
+    private Sequence sequence;
 
     public DefaultFactory(FactorySupport support, Class<?> blueprint, Class<D> dslClass)
     {
@@ -30,6 +32,7 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
         this.blueprint = blueprint;
         this.dslClass = dslClass;
         this.strategy = support.buildStrategyFor(blueprint);
+        this.sequence = new Sequence();
     }
 
     public T create()
@@ -39,7 +42,7 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
 
     public T create(Consumer<D> configuration)
     {
-        Map<String, Object> properties = support.extractDefaultsFrom(blueprint);
+        Map<String, Object> properties = support.extractDefaultsFrom(blueprint, sequence);
         D dsl = support.dslFor(dslClass, properties);
         configuration.accept(dsl);
 

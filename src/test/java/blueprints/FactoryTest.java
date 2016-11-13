@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.util.function.Supplier;
 
+import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -28,6 +29,7 @@ public class FactoryTest
         Model model = factory.create();
         assertThat(model.getName(), is("Jeremy"));
         assertThat(model.getAge(), is(40));
+        assertThat(model.getEmail(), is("model+1@example.com"));
     }
 
     @Test
@@ -39,6 +41,7 @@ public class FactoryTest
         });
         assertThat(model.getName(), is("Ada"));
         assertThat(model.getAge(), is(36));
+        assertThat(model.getEmail(), is("model+1@example.com"));
     }
 
     @Builder
@@ -47,6 +50,7 @@ public class FactoryTest
     {
         String name;
         Integer age;
+        String email;
     }
 
     @Blueprint(Model.class)
@@ -57,6 +61,9 @@ public class FactoryTest
 
         @PropertyDefault
         public Supplier<Integer> age = () -> 40;
+
+        @PropertyDefault
+        public SequencedSupplier<String> email = (i) -> format("model+%d@example.com", i);
     }
 
     interface ModelConfiguration
@@ -64,5 +71,6 @@ public class FactoryTest
     {
         void name(String value);
         void age(Integer value);
+        void email(String value);
     }
 }

@@ -1,6 +1,8 @@
 package blueprints.factory;
 
+import blueprints.Sequence;
 import blueprints.PropertyDefault;
+import blueprints.SequencedSupplier;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,21 +11,26 @@ import java.util.function.Supplier;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class PropertyExtractorTest
 {
     private PropertyExtractor propertyExtractor;
+    private Sequence sequence;
 
     @Before
     public void setUp()
     {
+        sequence = mock(Sequence.class);
         propertyExtractor = new PropertyExtractor();
     }
 
     @Test
     public void shouldExtractPublicFieldsAnnotatedWithPropertyDefault()
     {
-        Map<String, Object> defaults = propertyExtractor.extractDefaults(ModelBlueprint.class);
+        Map<String, Object> defaults = propertyExtractor.extractDefaults(ModelBlueprint.class, sequence);
         assertThat(defaults.size(), is(2));
         assertThat(defaults.containsKey("ignoredProperty"), is(false));
         assertThat(defaults.containsKey("privateProperty"), is(false));
@@ -34,15 +41,19 @@ public class PropertyExtractorTest
     @Test
     public void shouldHandlePublicFieldsWhichAreSuppliersAndAnnotatedWithPropertyDefaultDifferently()
     {
-        Map<String, Object> defaults = propertyExtractor.extractDefaults(SupplierBasedModelBlueprint.class);
-        assertThat(defaults.size(), is(1));
-        assertThat(defaults.get("name"), is("Jeremy"));
+        when(sequence.next()).thenReturn(36);
+
+        Map<String, Object> defaults = propertyExtractor.extractDefaults(SupplierBasedModelBlueprint.class, sequence);
+        assertThat(defaults.size(), is(2));
+        assertThat(defaults.get("name"), is("Supplied"));
+        assertThat(defaults.get("age"), is(36));
+        verify(sequence).next();
     }
 
     @Test(expected = RuntimeException.class)
     public void shouldBlowUpIfNoPublicConstructorIsPresent()
     {
-        propertyExtractor.extractDefaults(PrivateConstructorModelBlueprint.class);
+        propertyExtractor.extractDefaults(PrivateConstructorModelBlueprint.class, sequence);
     }
 
     static class ModelBlueprint
@@ -62,7 +73,10 @@ public class PropertyExtractorTest
     static class SupplierBasedModelBlueprint
     {
         @PropertyDefault
-        public Supplier<String> name = () -> "Jeremy";
+        public Supplier<String> name = () -> "Supplied";
+
+        @PropertyDefault
+        public SequencedSupplier<Integer> age = (i) -> i;
     }
 
     static class PrivateConstructorModelBlueprint
