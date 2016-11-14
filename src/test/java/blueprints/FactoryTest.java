@@ -20,7 +20,22 @@ public class FactoryTest
     @Before
     public void setUp()
     {
-        factory = new DefaultFactory<>(FactorySupport.defaultSupport, ModelBlueprint.class, ModelConfiguration.class);
+        factory = new DefaultFactory<>(
+            FactorySupport.defaultSupport(new Factories()
+            {
+                @Override
+                public <T, D extends ConfigurationDSL<T>> Factory<T, D> get(Class<T> modelClass)
+                {
+                    if (modelClass.equals(Model.class)) {
+                        return (Factory<T, D>) factory;
+                    }
+
+                    return null;
+                }
+            }),
+            ModelBlueprint.class,
+            ModelConfiguration.class
+        );
     }
 
     @Test

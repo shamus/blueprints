@@ -12,15 +12,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
-public class FactoriesTest
+public class FactoryScannerTest
 {
 
-    private Factories factories;
+    private FactoryScanner factories;
 
     @Before
     public void setUp()
     {
-        factories = new Factories("blueprints.runtime.models");
+        factories = new FactoryScanner("blueprints.runtime.models");
     }
 
     @Test

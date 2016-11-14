@@ -2,12 +2,16 @@ package blueprints.factory;
 
 import blueprints.Blueprint;
 import blueprints.ConfigurationDSL;
-import blueprints.Sequence;
+import blueprints.Context;
 import blueprints.Factory;
+import blueprints.Sequence;
 import blueprints.UnsafeOperation;
 import blueprints.factory.builder.BuildStrategy;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
@@ -42,11 +46,16 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
 
     public T create(Consumer<D> configuration)
     {
+        List<BiConsumer> afterHooks = new ArrayList<>();
         Map<String, Object> properties = support.extractDefaultsFrom(blueprint, sequence);
-        D dsl = support.dslFor(dslClass, properties);
+        D dsl = support.dslFor(dslClass, properties, afterHooks);
         configuration.accept(dsl);
 
-        return strategy.apply(properties);
+        T newInstance = strategy.apply(properties);
+        Context context = support.createContext();
+        afterHooks.forEach(hook -> hook.accept(newInstance, context));
+
+        return newInstance;
     }
 
     private void verifyBlueprint(Class<?> blueprint)
