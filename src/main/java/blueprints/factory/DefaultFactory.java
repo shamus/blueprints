@@ -9,6 +9,7 @@ import blueprints.UnsafeOperation;
 import blueprints.factory.builder.BuildStrategy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -27,16 +28,33 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
     private Class<D> dslClass;
     private BuildStrategy<T> strategy;
     private Sequence sequence;
+    private final List<Consumer<D>> traits;
+
 
     public DefaultFactory(FactorySupport support, Class<?> blueprint, Class<D> dslClass)
+    {
+        this(support, blueprint, dslClass, new ArrayList<>());
+    }
+
+    private DefaultFactory(FactorySupport support, Class<?> blueprint, Class<D> dslClass, List<Consumer<D>> traits)
     {
         verifyBlueprint(blueprint);
 
         this.support = support;
         this.blueprint = blueprint;
         this.dslClass = dslClass;
-        this.strategy = support.buildStrategyFor(blueprint);
+        this.traits = traits;
         this.sequence = new Sequence();
+        this.strategy = support.buildStrategyFor(blueprint);
+    }
+
+    @Override
+    public Factory<T, D> with(Consumer<D>... newTraits)
+    {
+        List<Consumer<D>> traitsCopy = new ArrayList<>(traits);
+        Arrays.stream(newTraits).forEach(traitsCopy::add);
+
+        return new DefaultFactory<>(support, blueprint, dslClass, traitsCopy);
     }
 
     public T create()
@@ -49,6 +67,7 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
         List<BiConsumer> afterHooks = new ArrayList<>();
         Map<String, Object> properties = support.extractDefaultsFrom(blueprint, sequence);
         D dsl = support.dslFor(dslClass, properties, afterHooks);
+        traits.forEach(trait -> trait.accept(dsl));
         configuration.accept(dsl);
 
         T newInstance = strategy.apply(properties);

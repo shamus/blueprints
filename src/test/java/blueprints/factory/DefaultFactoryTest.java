@@ -88,6 +88,27 @@ public class DefaultFactoryTest
         verify(afterHook).accept(NEWLY_BUILT, context);
     }
 
+    @Test
+    public void shouldAcceptTraitsAndApplyBeforeConfiguration()
+    {
+        Consumer<ModelConfiguration> trait = mock(Consumer.class);
+        Consumer<ModelConfiguration> anotherTrait = mock(Consumer.class);
+        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+            factorySupport,
+            ModelBlueprint.class,
+            ModelConfiguration.class
+        );
+
+        assertThat(factory.with(trait, anotherTrait).create(), is(NEWLY_BUILT));
+
+        verify(factorySupport, times(2)).buildStrategyFor(ModelBlueprint.class);
+        verify(factorySupport).extractDefaultsFrom(eq(ModelBlueprint.class), isA(Sequence.class));
+        verify(factorySupport).dslFor(eq(ModelConfiguration.class), eq(defaults), isA(List.class));
+        verify(trait).accept(isA(ModelConfiguration.class));
+        verify(anotherTrait).accept(isA(ModelConfiguration.class));
+        verify(buildStrategy).apply(defaults);
+    }
+
     @Test(expected = InvalidBlueprintDefinitionException.class)
     public void shouldRejectBlueprintsWithoutPublicDefaultConstructors()
     {
