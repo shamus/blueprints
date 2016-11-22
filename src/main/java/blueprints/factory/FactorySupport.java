@@ -20,8 +20,6 @@ public interface FactorySupport
     {
         return new FactorySupport()
         {
-            private PropertyExtractor propertyExtractor = new PropertyExtractor();
-
             @Override
             public Context createContext()
             {
@@ -64,7 +62,14 @@ public interface FactorySupport
             @Override
             public Map<String, Object> extractDefaultsFrom(Class<?> blueprint, Sequence sequence)
             {
-                return propertyExtractor.extractDefaults(blueprint, sequence);
+                BlueprintInspector blueprintInspector = new BlueprintInspector(blueprint, sequence);
+                return blueprintInspector.extractDefaults();
+            }
+
+            @Override
+            public BlueprintInspector inspectorFor(Class<?> blueprint, Sequence sequence)
+            {
+                return new BlueprintInspector(blueprint, sequence);
             }
         };
     }
@@ -74,4 +79,6 @@ public interface FactorySupport
     <T> BuildStrategy<T> buildStrategyFor(Class<?> blueprint);
     <T> T dslFor(Class<T> configurationDSL, Map<String, Object> properties, List<BiConsumer> afterHooks);
     Map<String, Object> extractDefaultsFrom(Class<?> blueprint, Sequence sequence);
+
+    BlueprintInspector inspectorFor(Class<?> blueprint, Sequence sequence);
 }

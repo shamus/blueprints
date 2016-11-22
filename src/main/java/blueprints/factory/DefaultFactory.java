@@ -64,8 +64,9 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
 
     public T create(Consumer<D> configuration)
     {
-        List<BiConsumer> afterHooks = new ArrayList<>();
-        Map<String, Object> properties = support.extractDefaultsFrom(blueprint, sequence);
+        BlueprintInspector blueprintInspector = support.inspectorFor(blueprint, sequence);
+        List<BiConsumer> afterHooks = blueprintInspector.extractAfterHooks();
+        Map<String, Object> properties = blueprintInspector.extractDefaults();
         D dsl = support.dslFor(dslClass, properties, afterHooks);
         traits.forEach(trait -> trait.accept(dsl));
         configuration.accept(dsl);

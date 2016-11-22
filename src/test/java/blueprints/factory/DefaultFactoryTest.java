@@ -8,8 +8,8 @@ import blueprints.factory.builder.BuildStrategy;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -30,18 +30,24 @@ public class DefaultFactoryTest
     private FactorySupport factorySupport;
     private HashMap<String, Object> defaults;
     private Context context;
+    private BlueprintInspector blueprintInspector;
+    private ArrayList afterHooks;
 
     @Before
     public void setUp()
     {
         factorySupport = mock(FactorySupport.class);
+        blueprintInspector = mock(BlueprintInspector.class);
         buildStrategy = mock(BuildStrategy.class);
         context = mock(Context.class);
 
         defaults = new HashMap<>();
+        afterHooks = new ArrayList();
         when(factorySupport.createContext()).thenReturn(context);
         when(factorySupport.buildStrategyFor(any())).thenReturn(buildStrategy);
-        when(factorySupport.extractDefaultsFrom(any(), any())).thenReturn(defaults);
+        when(factorySupport.inspectorFor(any(), any())).thenReturn(blueprintInspector);
+        when(blueprintInspector.extractDefaults()).thenReturn(defaults);
+        when(blueprintInspector.extractAfterHooks()).thenReturn(afterHooks);
         when(factorySupport.dslFor(any(), any(), any())).thenAnswer(invocation ->
             ReflectiveProxyConfigurationDSL.proxying(
                 invocation.getArgument(0),
@@ -64,8 +70,10 @@ public class DefaultFactoryTest
         assertThat(factory.create(), is(NEWLY_BUILT));
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
-        verify(factorySupport).extractDefaultsFrom(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(eq(ModelConfiguration.class), eq(defaults), isA(List.class));
+        verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
+        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(blueprintInspector).extractDefaults();
+        verify(blueprintInspector).extractAfterHooks();
         verify(buildStrategy).apply(defaults);
     }
 
@@ -82,9 +90,12 @@ public class DefaultFactoryTest
         assertThat(factory.create(configuration -> configuration.after(afterHook)), is(NEWLY_BUILT));
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
-        verify(factorySupport).extractDefaultsFrom(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(eq(ModelConfiguration.class), eq(defaults), isA(List.class));
+        verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
+        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
         verify(buildStrategy).apply(defaults);
+        verify(blueprintInspector).extractDefaults();
+        verify(blueprintInspector).extractAfterHooks();
+        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
         verify(afterHook).accept(NEWLY_BUILT, context);
     }
 
@@ -102,10 +113,11 @@ public class DefaultFactoryTest
         assertThat(factory.with(trait, anotherTrait).create(), is(NEWLY_BUILT));
 
         verify(factorySupport, times(2)).buildStrategyFor(ModelBlueprint.class);
-        verify(factorySupport).extractDefaultsFrom(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(eq(ModelConfiguration.class), eq(defaults), isA(List.class));
+        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
         verify(trait).accept(isA(ModelConfiguration.class));
         verify(anotherTrait).accept(isA(ModelConfiguration.class));
+        verify(blueprintInspector).extractDefaults();
+        verify(blueprintInspector).extractAfterHooks();
         verify(buildStrategy).apply(defaults);
     }
 

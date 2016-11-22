@@ -4,6 +4,7 @@ import blueprints.factory.DefaultFactory;
 import blueprints.factory.FactorySupport;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,6 +52,7 @@ public class FactoryTest
         assertThat(model.getName(), is("Jeremy"));
         assertThat(model.getAge(), is(40));
         assertThat(model.getEmail(), is("model+1@example.com"));
+        assertThat(model.isSomeLogicPerformed(), is(true));
     }
 
     @Test
@@ -63,10 +65,11 @@ public class FactoryTest
         assertThat(model.getName(), is("Ada"));
         assertThat(model.getAge(), is(36));
         assertThat(model.getEmail(), is("model+1@example.com"));
+        assertThat(model.isSomeLogicPerformed(), is(true));
     }
 
     @Test
-    public void shouldCreateAModelWithAnAfterHook()
+    public void shouldCreateAModelFromConfigurationWithAnAfterHook()
     {
         BiConsumer<Model, Context> afterHook = mock(BiConsumer.class);
 
@@ -77,6 +80,7 @@ public class FactoryTest
         assertThat(model.getName(), is("Jeremy"));
         assertThat(model.getAge(), is(40));
         assertThat(model.getEmail(), is("model+1@example.com"));
+        assertThat(model.isSomeLogicPerformed(), is(true));
         verify(afterHook).accept(eq(model), isA(Context.class));
     }
 
@@ -96,6 +100,7 @@ public class FactoryTest
         assertThat(model.getName(), is("Ada"));
         assertThat(model.getAge(), is(36));
         assertThat(model.getEmail(), is("model+1@example.com"));
+        assertThat(model.isSomeLogicPerformed(), is(true));
         verify(afterHook).accept(eq(model), isA(Context.class));
     }
 
@@ -116,6 +121,7 @@ public class FactoryTest
         assertThat(model.getName(), is("Ada"));
         assertThat(model.getAge(), is(30));
         assertThat(model.getEmail(), is("model+1@example.com"));
+        assertThat(model.isSomeLogicPerformed(), is(true));
         verify(afterHook).accept(eq(model), isA(Context.class));
     }
 
@@ -126,6 +132,14 @@ public class FactoryTest
         String name;
         Integer age;
         String email;
+
+        @NonFinal
+        boolean someLogicPerformed;
+
+        public void someLogic()
+        {
+            someLogicPerformed = true;
+        }
     }
 
     @Blueprint(Model.class)
@@ -139,6 +153,11 @@ public class FactoryTest
 
         @PropertyDefault
         public SequencedSupplier<String> email = (i) -> format("model+%d@example.com", i);
+
+        @AfterBuild
+        public BiConsumer<Model, Context> after = (model, context) -> {
+            model.someLogic();
+        };
     }
 
     interface ModelConfiguration
