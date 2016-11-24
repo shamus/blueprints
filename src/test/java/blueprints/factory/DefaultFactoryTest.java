@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -44,6 +45,7 @@ public class DefaultFactoryTest
         defaults = new HashMap<>();
         afterHooks = new ArrayList();
         when(factorySupport.createContext()).thenReturn(context);
+        when(factorySupport.createContext(any())).thenReturn(context);
         when(factorySupport.buildStrategyFor(any())).thenReturn(buildStrategy);
         when(factorySupport.inspectorFor(any(), any())).thenReturn(blueprintInspector);
         when(blueprintInspector.extractDefaults()).thenReturn(defaults);
@@ -72,6 +74,28 @@ public class DefaultFactoryTest
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
         verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
         verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).createContext(eq(new HashMap<>()));
+        verify(blueprintInspector).extractDefaults();
+        verify(blueprintInspector).extractAfterHooks();
+        verify(buildStrategy).apply(defaults);
+    }
+
+    @Test
+    public void shouldCreateWithCreateProperties()
+    {
+        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+            factorySupport,
+            ModelBlueprint.class,
+            ModelConfiguration.class
+        );
+
+        Map<String, Object> properties = new HashMap<>();
+        assertThat(factory.create(properties), is(NEWLY_BUILT));
+
+        verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
+        verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
+        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).createContext(properties);
         verify(blueprintInspector).extractDefaults();
         verify(blueprintInspector).extractAfterHooks();
         verify(buildStrategy).apply(defaults);
@@ -92,10 +116,33 @@ public class DefaultFactoryTest
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
         verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
         verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).createContext(eq(new HashMap<>()));
         verify(buildStrategy).apply(defaults);
         verify(blueprintInspector).extractDefaults();
         verify(blueprintInspector).extractAfterHooks();
+        verify(afterHook).accept(NEWLY_BUILT, context);
+    }
+
+    @Test
+    public void shouldCreateWithPropertiesAndConfiguration()
+    {
+        BiConsumer<Object, Context> afterHook = mock(BiConsumer.class);
+        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+            factorySupport,
+            ModelBlueprint.class,
+            ModelConfiguration.class
+        );
+
+        Map<String, Object> properties = new HashMap<>();
+        assertThat(factory.create(properties, configuration -> configuration.after(afterHook)), is(NEWLY_BUILT));
+
+        verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
+        verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
         verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).createContext(properties);
+        verify(buildStrategy).apply(defaults);
+        verify(blueprintInspector).extractDefaults();
+        verify(blueprintInspector).extractAfterHooks();
         verify(afterHook).accept(NEWLY_BUILT, context);
     }
 

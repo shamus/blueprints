@@ -8,6 +8,8 @@ import lombok.experimental.NonFinal;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -113,9 +115,14 @@ public class FactoryTest
             configuration.age(36);
         };
 
-        Model model = factory.with(trait).create(configuration -> {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("value", 3);
+        Model model = factory.with(trait).create(properties, configuration -> {
             configuration.age(30);
             configuration.after(afterHook);
+            configuration.after((newModel, context) -> {
+                assertThat(context.get("value"), is(3));
+            });
         });
 
         assertThat(model.getName(), is("Ada"));

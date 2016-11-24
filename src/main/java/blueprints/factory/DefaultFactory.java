@@ -10,6 +10,7 @@ import blueprints.factory.builder.BuildStrategy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -29,7 +30,6 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
     private BuildStrategy<T> strategy;
     private Sequence sequence;
     private final List<Consumer<D>> traits;
-
 
     public DefaultFactory(FactorySupport support, Class<?> blueprint, Class<D> dslClass)
     {
@@ -59,10 +59,20 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
 
     public T create()
     {
-        return create((cofiguration) -> {});
+        return create(new HashMap<>(), (cofiguration) -> {});
+    }
+
+    public T create(Map<String, Object> createProperties)
+    {
+        return create(createProperties, (cofiguration) -> {});
     }
 
     public T create(Consumer<D> configuration)
+    {
+        return create(new HashMap<>(), configuration);
+    }
+
+    public T create(Map<String, Object> createProperties, Consumer<D> configuration)
     {
         BlueprintInspector blueprintInspector = support.inspectorFor(blueprint, sequence);
         List<BiConsumer> afterHooks = blueprintInspector.extractAfterHooks();
@@ -72,7 +82,7 @@ public class DefaultFactory<T, D extends ConfigurationDSL<T>>
         configuration.accept(dsl);
 
         T newInstance = strategy.apply(properties);
-        Context context = support.createContext();
+        Context context = support.createContext(createProperties);
         afterHooks.forEach(hook -> hook.accept(newInstance, context));
 
         return newInstance;
