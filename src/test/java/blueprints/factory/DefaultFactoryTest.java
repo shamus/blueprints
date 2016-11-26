@@ -63,17 +63,17 @@ public class DefaultFactoryTest
     @Test
     public void shouldCreate()
     {
-        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+        DefaultFactory<Object, ObjectConfiguration> factory = new DefaultFactory<>(
             factorySupport,
             ModelBlueprint.class,
-            ModelConfiguration.class
+            ObjectConfiguration.class
         );
 
         assertThat(factory.create(), is(NEWLY_BUILT));
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
         verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).dslFor(ObjectConfiguration.class, defaults, afterHooks);
         verify(factorySupport).createContext(eq(new HashMap<>()));
         verify(blueprintInspector).extractDefaults();
         verify(blueprintInspector).extractAfterHooks();
@@ -83,10 +83,10 @@ public class DefaultFactoryTest
     @Test
     public void shouldCreateWithCreateProperties()
     {
-        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+        DefaultFactory<Object, ObjectConfiguration> factory = new DefaultFactory<>(
             factorySupport,
             ModelBlueprint.class,
-            ModelConfiguration.class
+            ObjectConfiguration.class
         );
 
         Map<String, Object> properties = new HashMap<>();
@@ -94,7 +94,7 @@ public class DefaultFactoryTest
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
         verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).dslFor(ObjectConfiguration.class, defaults, afterHooks);
         verify(factorySupport).createContext(properties);
         verify(blueprintInspector).extractDefaults();
         verify(blueprintInspector).extractAfterHooks();
@@ -105,17 +105,17 @@ public class DefaultFactoryTest
     public void shouldCreateWithConfiguration()
     {
         BiConsumer<Object, Context> afterHook = mock(BiConsumer.class);
-        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+        DefaultFactory<Object, ObjectConfiguration> factory = new DefaultFactory<>(
             factorySupport,
             ModelBlueprint.class,
-            ModelConfiguration.class
+            ObjectConfiguration.class
         );
 
         assertThat(factory.create(configuration -> configuration.after(afterHook)), is(NEWLY_BUILT));
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
         verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).dslFor(ObjectConfiguration.class, defaults, afterHooks);
         verify(factorySupport).createContext(eq(new HashMap<>()));
         verify(buildStrategy).apply(defaults);
         verify(blueprintInspector).extractDefaults();
@@ -127,10 +127,10 @@ public class DefaultFactoryTest
     public void shouldCreateWithPropertiesAndConfiguration()
     {
         BiConsumer<Object, Context> afterHook = mock(BiConsumer.class);
-        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+        DefaultFactory<Object, ObjectConfiguration> factory = new DefaultFactory<>(
             factorySupport,
             ModelBlueprint.class,
-            ModelConfiguration.class
+            ObjectConfiguration.class
         );
 
         Map<String, Object> properties = new HashMap<>();
@@ -138,7 +138,7 @@ public class DefaultFactoryTest
 
         verify(factorySupport).buildStrategyFor(ModelBlueprint.class);
         verify(factorySupport).inspectorFor(eq(ModelBlueprint.class), isA(Sequence.class));
-        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
+        verify(factorySupport).dslFor(ObjectConfiguration.class, defaults, afterHooks);
         verify(factorySupport).createContext(properties);
         verify(buildStrategy).apply(defaults);
         verify(blueprintInspector).extractDefaults();
@@ -149,20 +149,20 @@ public class DefaultFactoryTest
     @Test
     public void shouldAcceptTraitsAndApplyBeforeConfiguration()
     {
-        Consumer<ModelConfiguration> trait = mock(Consumer.class);
-        Consumer<ModelConfiguration> anotherTrait = mock(Consumer.class);
-        DefaultFactory<Object, ModelConfiguration> factory = new DefaultFactory<>(
+        Consumer<ObjectConfiguration> trait = mock(Consumer.class);
+        Consumer<ObjectConfiguration> anotherTrait = mock(Consumer.class);
+        DefaultFactory<Object, ObjectConfiguration> factory = new DefaultFactory<>(
             factorySupport,
             ModelBlueprint.class,
-            ModelConfiguration.class
+            ObjectConfiguration.class
         );
 
         assertThat(factory.with(trait, anotherTrait).create(), is(NEWLY_BUILT));
 
         verify(factorySupport, times(2)).buildStrategyFor(ModelBlueprint.class);
-        verify(factorySupport).dslFor(ModelConfiguration.class, defaults, afterHooks);
-        verify(trait).accept(isA(ModelConfiguration.class));
-        verify(anotherTrait).accept(isA(ModelConfiguration.class));
+        verify(factorySupport).dslFor(ObjectConfiguration.class, defaults, afterHooks);
+        verify(trait).accept(isA(ObjectConfiguration.class));
+        verify(anotherTrait).accept(isA(ObjectConfiguration.class));
         verify(blueprintInspector).extractDefaults();
         verify(blueprintInspector).extractAfterHooks();
         verify(buildStrategy).apply(defaults);
@@ -171,13 +171,13 @@ public class DefaultFactoryTest
     @Test(expected = InvalidBlueprintDefinitionException.class)
     public void shouldRejectBlueprintsWithoutPublicDefaultConstructors()
     {
-        new DefaultFactory<>(factorySupport, PrivateConstructorModelBlueprint.class, ModelConfiguration.class);
+        new DefaultFactory<>(factorySupport, PrivateConstructorModelBlueprint.class, StringConfiguration.class);
     }
 
     @Test(expected = InvalidBlueprintDefinitionException.class)
     public void shouldRejectBlueprintsWithoutTheBlueprintAnnotation()
     {
-        new DefaultFactory<>(factorySupport, NoAnnotationModelBlueprint.class, ModelConfiguration.class);
+        new DefaultFactory<>(factorySupport, NoAnnotationModelBlueprint.class, ObjectConfiguration.class);
     }
 
     @Blueprint(Object.class)
@@ -185,12 +185,7 @@ public class DefaultFactoryTest
     {
     }
 
-    interface ModelConfiguration
-    extends ConfigurationDSL<Object>
-    {
-    }
-
-    @Blueprint(Object.class)
+    @Blueprint(String.class)
     static class PrivateConstructorModelBlueprint
     {
         private PrivateConstructorModelBlueprint() {}

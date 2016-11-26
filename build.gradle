@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     compile 'org.reflections:reflections:0.9.10'
+    compile 'com.squareup:javapoet:1.7.0'
 
     testCompile "org.projectlombok:lombok:1.16.10"
     testCompile 'junit:junit:4.12'
