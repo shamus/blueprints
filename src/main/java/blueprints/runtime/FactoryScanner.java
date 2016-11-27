@@ -4,6 +4,7 @@ import blueprints.Blueprint;
 import blueprints.ConfigurationDSL;
 import blueprints.DerivedFrom;
 import blueprints.Factories;
+import blueprints.NoSuchFactoryException;
 import blueprints.factory.DefaultFactory;
 import blueprints.Factory;
 import blueprints.factory.FactorySupport;
@@ -39,7 +40,12 @@ public class FactoryScanner
     @Override
     public <T, D extends ConfigurationDSL<T>> Factory<T, D> get(Class<T> modelClass)
     {
-        return factories.get(modelClass);
+        Factory factory = factories.get(modelClass);
+        if (factory == null) {
+            throw new NoSuchFactoryException(modelClass);
+        }
+
+        return factory;
     }
 
     private Class<?> getClassFromAnnotation(Class<?> annotatedClass, Class<? extends Annotation> annotation)
