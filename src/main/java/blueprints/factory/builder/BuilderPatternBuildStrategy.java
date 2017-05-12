@@ -1,6 +1,10 @@
 package blueprints.factory.builder;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 import static blueprints.UnsafeOperation.heedlessly;
 
@@ -42,9 +46,32 @@ public class BuilderPatternBuildStrategy<R>
 
     private void setValue(Object builder, String methodName, Object value)
     {
-        heedlessly(CannotBuildModelException::new, () -> {
+        heedlessly(
+            CannotBuildModelException::new,
+            () -> getMethod(builder, methodName, value).invoke(builder, value)
+        );
+    }
+
+    private Method getMethod(Object builder, String methodName, Object value)
+    throws NoSuchFieldException
+    {
+        Class<?> builderClass = builder.getClass();
+        try {
             Class[] types = new Class[]{modelClass.getDeclaredField(methodName).getType()};
-            return builder.getClass().getMethod(methodName, types).invoke(builder, value);
-        });
+            return builderClass.getMethod(methodName, types);
+        }
+        catch (NoSuchMethodException e) {
+            return Arrays.stream(builderClass.getMethods())
+                .filter(method -> method.getName().equals(methodName))
+                .filter(method -> method.getParameterCount() == 1)
+                .filter(method -> {
+                    Parameter[] parameters = method.getParameters();
+                    return Objects.nonNull(value) && Arrays.stream(parameters).allMatch(param ->
+                        param.getType().isAssignableFrom(value.getClass())
+                    );
+                })
+                .findFirst()
+                .get();
+        }
     }
 }
